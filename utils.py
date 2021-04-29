@@ -124,8 +124,8 @@ def draw_plot(player, season, template, table):
         cols = fw_cols
         colors = fw_colors
     elif template == 'MFFW' or template == 'FWMF':
-        cols = fw_cols
-        colors = fw_colors
+        cols = mffw_cols
+        colors = mffw_colors
     elif template == 'MF':
         cols = mf_cols
         colors = mf_colors
