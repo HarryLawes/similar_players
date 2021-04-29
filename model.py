@@ -22,12 +22,12 @@ knn = joblib.load('model.joblib')
 
 def find_similar_players(player_name, season, n_players=5, return_same_player=False):
     index = mod_players[(mod_players['Player'] == player_name)\
-                        &(mod_players['Season'] - season == 2000)].index[0]
+                        &(mod_players['Season'] - season == 0)].index[0]
     distances, indices = knn.kneighbors(X_transformed[index:index+1], n_neighbors=n_players+2)
     similar_players = mod_players.iloc[indices[0], :]
     if return_same_player == False:
         similar_players = similar_players[(similar_players['Player']!=player_name)\
-                                          |(similar_players['Season'] - season == 2000)]
+                                          |(similar_players['Season'] - season == 0)]
     return similar_players.head(n_players+1)
 
 #print(find_similar_players(player_name, season))

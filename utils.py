@@ -1,4 +1,10 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.patches import Wedge
+
+players = pd.read_csv('similar_players/data/players.csv')
+players = players.drop(columns=['Unnamed: 0'])
+mod_players = players[players['90s']>5]
 
 def clean_name(x):
     name = x.split('\\')[1]
@@ -61,15 +67,15 @@ def add_shooting(df, season):
 
 def add_possession(df, season):
     possession = pd.read_csv(f'data/possession{season}.csv')
-    possession = possession[['90s','Succ%','#Pl','Carries','TotDist','PrgDist','01-Mar','CPA']]
+    possession = possession[['90s','Succ%','#Pl','Prog','TotDist','PrgDist','01-Mar','CPA']]
     possession = possession.rename(columns={'01-Mar':'Final3rdDrib'})
     possession['#Pl'] = round(possession['#Pl']/possession['90s'],2)
-    possession['Carries'] = round(possession['Carries']/possession['90s'],2)
+    possession['Prog'] = round(possession['Prog']/possession['90s'],2)
     possession['Final3rdDrib'] = round(possession['Final3rdDrib']/possession['90s'],2)
     possession['CPA'] = round(possession['CPA']/possession['90s'],2)
     possession['PrgRatioDrib'] = round(possession['PrgDist']/possession['TotDist'],2)
     possession = possession.fillna(possession.median())
-    possession = possession[['Succ%','#Pl','Carries','PrgRatioDrib','Final3rdDrib','CPA']]
+    possession = possession[['Succ%','#Pl','Prog','PrgRatioDrib','Final3rdDrib','CPA']]
     df = df.merge(possession, left_index=True,right_index=True)
     return df
 
@@ -100,3 +106,60 @@ def get_season(year):
     players = add_possession(players,season = year)
     players = add_defensive(players,season = year)
     return players
+
+def draw_plot(player, season, template, table):
+    mffw_cols = ['npxG','npxG/Sh','PrgRatio','KP','xA','Prog','Final3rdDrib','Press']
+    mffw_colors = ['red','red','blue','blue','blue','yellow','yellow','green']
+    fw_cols = ['npxG','npxG/Sh','SoT%','Sh/90','Passes','xA','Prog','Press']
+    fw_colors = ['red','red','red','red','blue','blue','yellow','green']
+    mf_cols = ['npxG','xA','PrgRatio','Passes','Prog','PrgRatioDrib','Tkl','Press']
+    mf_colors = ['red','blue','blue','blue','yellow','yellow','green','green']
+    df_cols = ['xA','CrsPA','Prog','Blocks','Int','Tkl%','Press','Err']
+    df_colors = ['blue','blue','yellow','green','green','green','green','green']
+    dfmf_cols = ['xA','CrsPA','PrgRatio','Passes','Prog','Int','Tkl%','Press']
+    dfmf_colors = ['blue','blue','blue','blue','yellow','green','green','green']
+    dffw_cols = ['npxG','xA','CrsPA','KP','#Pl','Prog','Tkl','Press']
+    dffw_colors = ['red','blue','blue','blue','yellow','yellow','green','green']
+    if template == 'FW':
+        cols = fw_cols
+        colors = fw_colors
+    elif template == 'MFFW' or template == 'FWMF':
+        cols = fw_cols
+        colors = fw_colors
+    elif template == 'MF':
+        cols = mf_cols
+        colors = mf_colors
+    elif template == 'DF':
+        cols = df_cols
+        colors = df_colors
+    elif template == 'DFMF':
+        cols = dfmf_cols
+        colors = dfmf_colors
+    elif template == 'DFFW' or template == 'FWDF':
+        cols = dffw_cols
+        colors = dffw_colors
+    label_coords = [(0.9,0.65),(0.65,0.9),(0.30,0.9),(0.01,0.65),(0.01,0.35),(0.30,0.075),(0.65,0.075),(0.9,0.35)]
+    fig, axes = plt.subplots(2,3,figsize=(30,20))
+    for i in range(2):
+        for j in range(3):
+            if i == 0:
+                player = table['Player'][table.index[j]]
+                season = table['Season'][table.index[j]]
+            else:
+                player = table['Player'][table.index[j+3]]
+                season = table['Season'][table.index[j+3]]
+            player_stats = players[(players['Player'] == player) & (players['Season']==season)]
+            player_stats = player_stats[cols]
+            maxs = mod_players[cols].max()
+            player_viz = []
+            for col in cols:
+                player_viz.append(player_stats[col][player_stats.index[0]]/maxs[col])
+            for n in range(8):
+                axes[i,j].add_patch(Wedge((0.5,0.5),player_viz[n]*0.4,45*n,45*(n+1),edgecolor='black',facecolor=colors[n]))
+                axes[i,j].annotate(cols[n],label_coords[n], fontsize=16)
+                draw_circle = plt.Circle((0.5,0.5),0.4, fill=False)
+                axes[i,j].add_artist(draw_circle)
+                axes[i,j].axis('off')
+                axes[i,j].set_title(f'{player}, {season-1}/{season-2000}', fontsize=24)
+    plt.show()
+    return fig
