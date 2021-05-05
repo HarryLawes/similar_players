@@ -2,7 +2,7 @@ import index
 import players
 import streamlit as st
 PAGES = {
-    "Players": players,
+    "Doppelgängers": players,
     "Index": index
 }
 st.sidebar.title('Navigation')

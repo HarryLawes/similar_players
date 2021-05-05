@@ -7,10 +7,13 @@ from utils import draw_plot
 def app():
     players = pd.read_csv('similar_players/data/players.csv')
     players = players.drop(columns=['Unnamed: 0'])
+    players = players[players['Pos'] != 'GK']
 
+    st.title("Doppelgängers")
     st.markdown("""
-    ## Pick a player and we'll find you similar players
+    #### Pick a player from Europe's Top 5 Leagues and we'll find you their footballing Doppelgängers
     """)
+
 
     player_name = st.text_input("Player Name").title()
     season_input = st.selectbox("Season", ('2019/20', '2020/21'))
